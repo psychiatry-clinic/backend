@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  username       String        @unique
+  password       String
+  role           UserRole
+  doctor         Doctor?       @relation(fields: [doctorId], references: [id])
+  doctorId       Int?
+  psychologist   Psychologist? @relation(fields: [psychologistId], references: [id])
+  psychologistId Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum UserRole {
+  DOCTOR
+  PSYCHOLOGIST
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+model Patient {
+  id           Int            @id @default(autoincrement())
+  name         String
+  dob          Int
+  gender       Gender
+  phone        String
+  visits       Visit[]
+  Prescription Prescription[]
+  Demographics Demographics[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Doctor {
+  id           Int            @id @default(autoincrement())
+  name         String
+  phone        String
+  visits       Visit[]
+  User         User[]
+  Prescription Prescription[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Psychologist {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  visits    Visit[]
+  User      User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Demographics {
+  id             Int      @id @default(autoincrement())
+  patient        Patient? @relation(fields: [patientId], references: [id])
+  patientId      Int?
+  address        String
+  marital_status String
+  occupation     String
+  children       String
+  residence      String
+  educatiob      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Visit {
+  id                     Int           @id @default(autoincrement())
+  patient                Patient       @relation(fields: [patientId], references: [id])
+  patientId              Int
+  doctor                 Doctor?       @relation(fields: [doctorId], references: [id])
+  doctorId               Int?
+  Psychologist           Psychologist? @relation(fields: [psychologistId], references: [id])
+  psychologistId         Int?
+  time                   DateTime
+  duration               Int // Duration of the appointment in minutes
+  chief_complaint        String
+  present_illness        String
+  suicide                String
+  family_hx              String
+  past_psychiatric_hx    String
+  past_medical_hx        String
+  forensic_hx            String
+  social_hx              String
+  drug_hx                String
+  substance              String
+  personal_hx            String
+  appearance             String
+  behavior               String
+  speech                 String
+  mood                   String
+  thought_form           String
+  thought_content        String
+  perception             String
+  cognitive_state        String
+  differential_diagnosis String
+  management             String
+  lab_tests              String
+  notes                  String
+  insight                String
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+}
+
+model Medication {
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String
+  prescriptions Prescription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Prescription {
+  id           Int        @id @default(autoincrement())
+  patient      Patient?   @relation(fields: [patientId], references: [id])
+  patientId    Int?
+  doctor       Doctor     @relation(fields: [doctorId], references: [id])
+  doctorId     Int
+  medication   Medication @relation(fields: [medicationId], references: [id])
+  medicationId Int
+  dosage       String
+  instructions String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
