@@ -19,9 +19,9 @@ model User {
   doctorId       Int?
   psychologist   Psychologist? @relation(fields: [psychologistId], references: [id])
   psychologistId Int?
+  clinic         Clinic
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  clinic         Clinic
 }
 
 enum UserRole {
@@ -42,17 +42,17 @@ enum Gender {
 }
 
 model Patient {
-  id           Int            @id @default(autoincrement())
-  name         String
-  dob          Int
-  gender       Gender
-  phone        String
-  visits       Visit[]
-  Prescription Prescription[]
-  Demographics Demographics[]
-  test         Test[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id            Int            @id @default(autoincrement())
+  name          String
+  dob           Int
+  gender        Gender
+  phone         String
+  visits        Visit[]
+  prescriptions Prescription[]
+  demographics  Demographics[]
+  tests         Test[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Doctor {
@@ -60,7 +60,7 @@ model Doctor {
   name         String
   phone        String
   visits       Visit[]
-  User         User[]
+  user         User[]
   Prescription Prescription[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -70,8 +70,8 @@ model Psychologist {
   id        Int       @id @default(autoincrement())
   name      String
   phone     String
-  User      User[]
-  Session   Session[]
+  user      User[]
+  sessions  Session[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -125,14 +125,13 @@ model Visit {
   insight                String?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
-  psychologistId         Int?
 }
 
 model Session {
   id             Int           @id @default(autoincrement())
   notes          String
   clinic         Clinic
-  Psychologist   Psychologist? @relation(fields: [psychologistId], references: [id])
+  psychologist   Psychologist? @relation(fields: [psychologistId], references: [id])
   psychologistId Int?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -147,9 +146,9 @@ model Prescription {
   medications  Medication[]
   dosage       String
   instructions String
+  visits       Visit[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  Visit        Visit[]
 }
 
 model Medication {
@@ -171,8 +170,8 @@ model Test {
   value     String
   patient   Patient? @relation(fields: [patientId], references: [id])
   patientId Int?
+  visit     Visit?   @relation(fields: [visitId], references: [id])
+  visitId   Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Visit     Visit?   @relation(fields: [visitId], references: [id])
-  visitId   Int?
 }

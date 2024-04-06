@@ -84,9 +84,9 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
     },
     include: {
       visits: true,
-      Demographics: true,
-      Prescription: true,
-      test: true,
+      demographics: true,
+      prescriptions: true,
+      tests: true,
     },
   });
   console.log(res);

@@ -57,7 +57,7 @@ const seedData = async () => {
         role: "DOCTOR",
         psychologistId:
           psychologists && psychologists.length > 0 && i >= 5
-            ? psychologists[i - 6].id
+            ? psychologists[i - 5].id
             : null,
         clinic: "BaghdadTeachingHospital",
       },
@@ -86,7 +86,6 @@ const seedData = async () => {
       data: {
         patientId: patients[Math.floor(Math.random() * 20)].id,
         doctorId: doctors[Math.floor(Math.random() * 5)].id,
-        psychologistId: psychologists[Math.floor(Math.random() * 5)].id,
         clinic: "BaghdadTeachingHospital",
         duration: Math.floor(Math.random() * 106) + 15,
         chief_complaint: `Chief complaint ${i + 1}`,
