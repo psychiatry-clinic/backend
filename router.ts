@@ -42,11 +42,13 @@ router.post("/login", async (ctx: any) => {
   });
   if (user && user.password === password) {
     const token = await generateJWT(user);
+    console.log(user);
+
     ctx.status = 200;
     ctx.body = token;
   } else {
-    ctx.status = 501;
     ctx.body = "could not find user";
+    ctx.status = 401;
   }
 });
 
@@ -72,19 +74,25 @@ router.get("/search/:user_id/:text", jwtAuthMiddleware, async (ctx: any) => {
   ctx.body = res;
 });
 
-router.get(
-  "/patients/:user_id/:patient_id",
-  jwtAuthMiddleware,
-  async (ctx: any) => {
-    const patient_id = ctx.params.patient_id;
-    console.log(patient_id);
+router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
+  const patient_id = +ctx.params.patient_id;
+  console.log(patient_id);
 
-    // const res = await prisma.patient.findUnique();
-    // console.log(res);
+  const res = await prisma.patient.findUnique({
+    where: {
+      id: patient_id,
+    },
+    include: {
+      visits: true,
+      Demographics: true,
+      Prescription: true,
+      test: true,
+    },
+  });
+  console.log(res);
 
-    // ctx.body = res;
-  }
-);
+  ctx.body = res;
+});
 
 router.post(
   "/new-visit/:user_id/:patient_id",
