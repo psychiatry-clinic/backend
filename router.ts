@@ -35,7 +35,7 @@ router.get("/", async (ctx: any) => {
 
 router.post("/login", async (ctx: any) => {
   const { username, password } = ctx.request.body;
-  const user = await prisma.user.findFirst({
+  let user = await prisma.user.findFirst({
     where: {
       username: username,
     },
@@ -43,23 +43,44 @@ router.post("/login", async (ctx: any) => {
   if (user && user.password === password) {
     const token = await generateJWT(user);
     console.log(user);
+    user = { ...user, password: "nice try" };
 
     ctx.status = 200;
-    ctx.body = token;
+    ctx.body = {
+      accessToken: token,
+      userData: user,
+      userAbilityRules: "all",
+    };
   } else {
-    ctx.body = "could not find user";
+    ctx.body = "Wrong username or password";
     ctx.status = 401;
   }
 });
 
-router.get("/patients/:user_id", async (ctx: any) => {
+router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   try {
-    let res = await prisma.patient.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-    ctx.body = res;
+    const itemsPerPage = parseInt(ctx.query.itemsPerPage) || 10; // Default to 10 items per page if not provided
+    const page = parseInt(ctx.query.page) || 1;
+
+    const offset = (page - 1) * itemsPerPage;
+
+    console.log("page");
+    console.log(page);
+    const [patients, totalPatients] = await Promise.all([
+      prisma.patient.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: itemsPerPage,
+        skip: offset,
+      }),
+      prisma.patient.count(),
+    ]);
+
+    ctx.body = {
+      total: totalPatients,
+      patients: patients,
+    };
   } catch (error) {
     console.log(error);
     ctx.status = 500;
@@ -110,12 +131,38 @@ router.post(
   }
 );
 
-router.post("/new-patient/:user_id", jwtAuthMiddleware, async (ctx: any) => {
+router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   const creator_id = ctx.params.user_id;
-  const data = ctx.request.body;
+  const {
+    name,
+    dob,
+    gender,
+    phone,
+    marital_status,
+    children,
+    residence,
+    occupation,
+    education,
+  } = ctx.request.body;
   try {
-    // const res = await prisma.patient.create();
-    // ctx.body = res;
+    const res = await prisma.patient.create({
+      data: {
+        name,
+        dob,
+        gender,
+        phone,
+        demographics: {
+          create: {
+            marital_status,
+            children,
+            residence,
+            occupation,
+            education,
+          },
+        },
+      },
+    });
+    ctx.body = res;
     ctx.status = 200;
   } catch (error) {
     console.log(error);
