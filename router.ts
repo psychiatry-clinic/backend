@@ -98,21 +98,25 @@ router.get("/search/:user_id/:text", jwtAuthMiddleware, async (ctx: any) => {
 router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
   const patient_id = +ctx.params.patient_id;
   console.log(patient_id);
+  try {
+    const res = await prisma.patient.findUnique({
+      where: {
+        id: patient_id,
+      },
+      include: {
+        visits: true,
+        demographics: true,
+        prescriptions: true,
+        tests: true,
+      },
+    });
+    console.log(res);
 
-  const res = await prisma.patient.findUnique({
-    where: {
-      id: patient_id,
-    },
-    include: {
-      visits: true,
-      demographics: true,
-      prescriptions: true,
-      tests: true,
-    },
-  });
-  console.log(res);
-
-  ctx.body = res;
+    ctx.body = res;
+  } catch (error) {
+    console.log(error);
+    ctx.status = 500;
+  }
 });
 
 router.post(
