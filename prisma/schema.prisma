@@ -42,17 +42,28 @@ enum Gender {
 }
 
 model Patient {
-  id           Int            @id @default(autoincrement())
-  name         String
-  dob          Int
-  gender       Gender
-  phone        String?
-  visits       Visit[]
+  id            Int            @id @default(autoincrement())
+  name          String
+  dob           Int
+  gender        Gender
+  phone         String?
+  father_dob    Int?
+  mother_dob    Int?
+  father_age    Int?
+  mother_age    Int?
+  father_work   String?
+  mother_work   String?
+  related       Boolean?
+  siblings      Int?
+  order         Int?
+  familyHxId    Int
+  familyHx      FamilyHx?      @relation(fields: [familyHxId], references: [id])
+  visits        Visit[]
   prescriptions Prescription[]
-  demographics Demographics[]
+  demographics  Demographics[]
   tests         Test[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Doctor {
@@ -71,7 +82,7 @@ model Psychologist {
   name      String
   phone     String
   user      User[]
-  sessions   Session[]
+  sessions  Session[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -100,7 +111,6 @@ model Visit {
   chief_complaint        String?
   present_illness        String?
   suicide                String?
-  family_hx              String?
   past_psychiatric_hx    String?
   past_medical_hx        String?
   forensic_hx            String?
@@ -146,7 +156,7 @@ model Prescription {
   medications  Medication[]
   dosage       String
   instructions String
-  visits        Visit[]
+  visits       Visit[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -174,4 +184,10 @@ model Test {
   visitId   Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model FamilyHx {
+  id      Int       @id @default(autoincrement())
+  hx      String
+  Patient Patient[]
 }
