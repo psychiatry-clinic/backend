@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 const seedData = async () => {
   // Seed Clinics
-
   // const clinicA = await prisma.clinic.create({
   //   data: {
   //     name: "Clinic A",

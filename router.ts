@@ -63,9 +63,6 @@ router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     const page = parseInt(ctx.query.page) || 1;
 
     const offset = (page - 1) * itemsPerPage;
-
-    console.log("page");
-    console.log(page);
     const [patients, totalPatients] = await Promise.all([
       prisma.patient.findMany({
         orderBy: {
@@ -73,6 +70,9 @@ router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
         },
         take: itemsPerPage,
         skip: offset,
+        include: {
+          visits: true,
+        },
       }),
       prisma.patient.count(),
     ]);
@@ -142,6 +142,19 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     dob,
     gender,
     phone,
+    father_dob,
+    father_edu,
+    father_age,
+    father_work,
+    mother_dob,
+    mother_age,
+    mother_edu,
+    mother_work,
+    related,
+    siblings,
+    order,
+    familyHx,
+    notes,
     marital_status,
     children,
     residence,
@@ -155,6 +168,19 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
         dob,
         gender,
         phone,
+        father_dob,
+        father_edu,
+        father_age,
+        father_work,
+        mother_dob,
+        mother_age,
+        mother_edu,
+        mother_work,
+        related,
+        siblings,
+        order,
+        familyHx,
+        notes,
         demographics: {
           create: {
             marital_status,
