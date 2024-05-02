@@ -46,7 +46,7 @@ model Patient {
   name          String
   dob           Int
   gender        Gender
-  avatar        String?
+  avatar        String?        @db.VarChar(1000)
   phone         String?
   father_dob    Int?
   mother_dob    Int?
@@ -73,6 +73,7 @@ model Doctor {
   id           Int            @id @default(autoincrement())
   name         String
   phone        String
+  avatar       String?
   visits       Visit[]
   user         User[]
   Prescription Prescription[]

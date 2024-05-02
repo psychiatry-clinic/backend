@@ -42,7 +42,6 @@ router.post("/login", async (ctx: any) => {
   });
   if (user && user.password === password) {
     const token = await generateJWT(user);
-    console.log(user);
     user = { ...user, password: "nice try" };
 
     ctx.status = 200;
@@ -61,10 +60,31 @@ router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   try {
     const itemsPerPage = parseInt(ctx.query.itemsPerPage) || 10; // Default to 10 items per page if not provided
     const page = parseInt(ctx.query.page) || 1;
-
+    const q = ctx.query.q;
     const offset = (page - 1) * itemsPerPage;
+    let whereCondition = {};
+
+    if (q) {
+      whereCondition = {
+        OR: [
+          {
+            name: {
+              contains: q, // Search for patients whose name contains the provided query string
+              // mode: "insensitive", // Case-insensitive search
+            },
+          },
+          // Add more fields to search here if needed
+        ],
+      };
+    }
+
     const [patients, totalPatients] = await Promise.all([
       prisma.patient.findMany({
+        where: {
+          AND: [
+            whereCondition, // Include the constructed where condition
+          ],
+        },
         orderBy: {
           createdAt: "desc",
         },
@@ -87,9 +107,9 @@ router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   }
 });
 
-router.get("/search/:user_id/:text", jwtAuthMiddleware, async (ctx: any) => {
-  const text = ctx.params.text;
-  console.log(text);
+router.get("/search/:user_id", jwtAuthMiddleware, async (ctx: any) => {
+  const { query } = ctx.params.query;
+  console.log(query);
   const res = await prisma.patient.findMany({});
   console.log(res);
   ctx.body = res;
@@ -110,8 +130,6 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
         tests: true,
       },
     });
-    console.log(res);
-
     ctx.body = res;
   } catch (error) {
     console.log(error);
@@ -142,6 +160,7 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     dob,
     gender,
     phone,
+    avatar,
     father_dob,
     father_edu,
     father_age,
@@ -161,6 +180,8 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     occupation,
     education,
   } = ctx.request.body;
+  console.log(avatar);
+
   try {
     const res = await prisma.patient.create({
       data: {
@@ -168,6 +189,7 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
         dob,
         gender,
         phone,
+        avatar,
         father_dob,
         father_edu,
         father_age,
@@ -199,3 +221,5 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     ctx.status = 500;
   }
 });
+
+router.post("/upload/:user_id", jwtAuthMiddleware, async (ctx: any) => {});
