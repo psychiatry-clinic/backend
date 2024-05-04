@@ -154,7 +154,7 @@ router.post(
 );
 
 router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
-  const creator_id = ctx.params.user_id;
+  const creator_id = +ctx.params.user_id;
   const {
     name,
     dob,
@@ -180,46 +180,91 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     occupation,
     education,
   } = ctx.request.body;
-  console.log(avatar);
 
-  try {
-    const res = await prisma.patient.create({
-      data: {
-        name,
-        dob,
-        gender,
-        phone,
-        avatar,
-        father_dob,
-        father_edu,
-        father_age,
-        father_work,
-        mother_dob,
-        mother_age,
-        mother_edu,
-        mother_work,
-        related,
-        siblings,
-        order,
-        familyHx,
-        notes,
-        demographics: {
-          create: {
-            marital_status,
-            children,
-            residence,
-            occupation,
-            education,
-          },
-        },
+  if (creator_id) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: creator_id,
       },
     });
-    ctx.body = res;
-    ctx.status = 200;
-  } catch (error) {
-    console.log(error);
-    ctx.status = 500;
+    if (user?.role === "DOCTOR") {
+      try {
+        const res = await prisma.patient.create({
+          data: {
+            doctor: {
+              connect: {
+                id: creator_id,
+              },
+            },
+            name,
+            dob,
+            gender,
+            phone,
+            avatar,
+            father_dob,
+            father_edu,
+            father_age,
+            father_work,
+            mother_dob,
+            mother_age,
+            mother_edu,
+            mother_work,
+            related,
+            siblings,
+            order,
+            familyHx,
+            notes,
+            demographics: {
+              create: {
+                marital_status,
+                children,
+                residence,
+                occupation,
+                education,
+              },
+            },
+          },
+        });
+        ctx.body = res;
+        ctx.status = 200;
+      } catch (error) {
+        console.log(error);
+        ctx.status = 500;
+      }
+    } else {
+      ctx.status = 403;
+      return;
+    }
   }
 });
 
 router.post("/upload/:user_id", jwtAuthMiddleware, async (ctx: any) => {});
+
+router.get(
+  "/patients/visits/:user_id/:visit_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    try {
+      const visit_id = +ctx.params.visit_id;
+      const res = await prisma.visit.findUnique({
+        where: {
+          id: visit_id,
+        },
+        include: {
+          prescription: true,
+          tests: true,
+          doctor: true,
+        },
+      });
+      if (res) {
+        ctx.body = res;
+        ctx.status = 200;
+      } else {
+        ctx.status = 404;
+      }
+    } catch (error) {
+      ctx.status = 500;
+      console.log(error);
+    }
+  }
+);

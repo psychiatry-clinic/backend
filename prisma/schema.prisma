@@ -43,6 +43,8 @@ enum Gender {
 
 model Patient {
   id            Int            @id @default(autoincrement())
+  doctorId      Int
+  doctor        Doctor         @relation(fields: [doctorId], references: [id])
   name          String
   dob           Int
   gender        Gender
@@ -60,7 +62,8 @@ model Patient {
   siblings      Int?
   order         Int?
   notes         String?
-  familyHx      String?
+  familyHx      Json?
+  pastHx        Json?
   visits        Visit[]
   prescriptions Prescription[]
   demographics  Demographics[]
@@ -79,6 +82,7 @@ model Doctor {
   Prescription Prescription[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  Patient      Patient[]
 }
 
 model Psychologist {
@@ -86,7 +90,7 @@ model Psychologist {
   name      String
   phone     String
   user      User[]
-  sessions  Session[]
+  therapy   Therapy[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -112,37 +116,33 @@ model Visit {
   doctor                 Doctor?       @relation(fields: [doctorId], references: [id])
   doctorId               Int?
   clinic                 Clinic
+  active                 Boolean
   duration               Int? // Duration of the appointment in minutes
-  chief_complaint        String?
-  present_illness        String?
-  suicide                String?
-  past_psychiatric_hx    String?
-  past_medical_hx        String?
-  forensic_hx            String?
-  social_hx              String?
+  chief_complaint        Json?
+  present_illness        Json?
+  suicide                Json?
+  past_hx                Json?
+  occupation_hx          Json?
+  forensic_hx            Json?
+  social_hx              Json?
   drug_hx                String?
   substance              String?
   personal_hx            String?
-  appearance             String?
-  behavior               String?
-  speech                 String?
-  mood                   String?
-  thought_form           String?
-  thought_content        String?
-  perception             String?
-  cognitive_state        String?
+  examination            Json?
   differential_diagnosis String?
   management             String?
+  ix                     Json?
   prescription           Prescription? @relation(fields: [prescriptionId], references: [id])
   prescriptionId         Int?
   tests                  Test[]
+  therapyId              Int?
+  therapy                Therapy?      @relation(fields: [therapyId], references: [id])
   notes                  String?
-  insight                String?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 }
 
-model Session {
+model Therapy {
   id             Int           @id @default(autoincrement())
   notes          String
   clinic         Clinic
@@ -150,6 +150,7 @@ model Session {
   psychologistId Int?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  Visit          Visit[]
 }
 
 model Prescription {

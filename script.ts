@@ -69,6 +69,7 @@ const seedData = async () => {
   for (let i = 0; i < 20; i++) {
     const patient = await prisma.patient.create({
       data: {
+        doctorId: 1,
         name: `Patient ${i + 1}`,
         dob: 1999 + i,
         gender: Math.random() < 0.5 ? "Male" : "Female",
