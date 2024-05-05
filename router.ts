@@ -258,38 +258,10 @@ router.post(
   "/visits-new/:user_id/:patient_id",
   jwtAuthMiddleware,
   async (ctx: any) => {
-    const creator_id = +ctx.params.user_id;
-    const patient_id = +ctx.params.patient_id;
-    const {
-      chief_complaint,
-      present_illness,
-      examination,
-      differential_diagnosis,
-      ix,
-      management,
-      notes,
-      social_hx,
-      family_hx,
-      past_hx,
-      occupation_hx,
-      forensic_hx,
-      personal_hx,
-    } = ctx.request.body;
-
-    const res = await prisma.visit.create({
-      data: {
-        active: true,
-        clinic: "Kadhimiya",
-        patient: {
-          connect: {
-            id: patient_id,
-          },
-        },
-        doctor: {
-          connect: {
-            id: creator_id,
-          },
-        },
+    try {
+      const creator_id = +ctx.params.user_id;
+      const patient_id = +ctx.params.patient_id;
+      const {
         chief_complaint,
         present_illness,
         examination,
@@ -297,27 +269,58 @@ router.post(
         ix,
         management,
         notes,
-      },
-    });
-    console.log(res);
-
-    const res2 = await prisma.patient.update({
-      where: {
-        id: patient_id,
-      },
-      data: {
         social_hx,
         family_hx,
         past_hx,
         occupation_hx,
         forensic_hx,
         personal_hx,
-      },
-    });
-    console.log(res2);
+      } = ctx.request.body;
 
-    // ctx.body = res;
-    ctx.status = 200;
+      const res = await prisma.visit.create({
+        data: {
+          active: true,
+          clinic: "Kadhimiya",
+          patient: {
+            connect: {
+              id: patient_id,
+            },
+          },
+          doctor: {
+            connect: {
+              id: creator_id,
+            },
+          },
+          chief_complaint,
+          present_illness,
+          examination,
+          differential_diagnosis,
+          ix,
+          management,
+          notes,
+        },
+      });
+
+      const res2 = await prisma.patient.update({
+        where: {
+          id: patient_id,
+        },
+        data: {
+          social_hx,
+          family_hx,
+          past_hx,
+          occupation_hx,
+          forensic_hx,
+          personal_hx,
+        },
+      });
+
+      // ctx.body = res;
+      ctx.status = 200;
+    } catch (error) {
+      console.log(error);
+      ctx.status = 500;
+    }
   }
 );
 
