@@ -137,22 +137,37 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
   }
 });
 
-router.post(
-  "/new-visit/:user_id/:patient_id",
+// get patient visits
+router.get(
+  "/patients/visits/:user_id/:visit_id",
   jwtAuthMiddleware,
   async (ctx: any) => {
-    const patient_id = ctx.params.patient_id;
-    const provider_id = ctx.params.user_id;
-    const data = ctx.request.body;
-
-    // const res = await prisma.visit.create()
-    // console.log(res);
-    console.log(provider_id);
-    console.log(patient_id);
-    ctx.status = 200;
+    try {
+      const visit_id = +ctx.params.visit_id;
+      const res = await prisma.visit.findUnique({
+        where: {
+          id: visit_id,
+        },
+        include: {
+          prescription: true,
+          tests: true,
+          doctor: true,
+        },
+      });
+      if (res) {
+        ctx.body = res;
+        ctx.status = 200;
+      } else {
+        ctx.status = 404;
+      }
+    } catch (error) {
+      ctx.status = 500;
+      console.log(error);
+    }
   }
 );
 
+// post new patient
 router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   const creator_id = +ctx.params.user_id;
   const {
@@ -212,7 +227,7 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
             related,
             siblings,
             order,
-            familyHx,
+            family_hx,
             notes,
             demographics: {
               create: {
@@ -238,33 +253,65 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   }
 });
 
-router.post("/upload/:user_id", jwtAuthMiddleware, async (ctx: any) => {});
-
-router.get(
-  "/patients/visits/:user_id/:visit_id",
+// create new visit
+router.post(
+  "/visits-new/:user_id/:patient_id",
   jwtAuthMiddleware,
   async (ctx: any) => {
-    try {
-      const visit_id = +ctx.params.visit_id;
-      const res = await prisma.visit.findUnique({
-        where: {
-          id: visit_id,
+    const creator_id = +ctx.params.user_id;
+    const patient_id = +ctx.params.patient_id;
+    const {
+      chief_complaint,
+      present_illness,
+      examination,
+      differential_diagnosis,
+      ix,
+      management,
+      notes,
+      social_hx,
+      familyHx,
+    } = ctx.request.body;
+
+    const res = await prisma.visit.create({
+      data: {
+        active: true,
+        clinic: "Kadhimiya",
+        patient: {
+          connect: {
+            id: patient_id,
+          },
         },
-        include: {
-          prescription: true,
-          tests: true,
-          doctor: true,
+        doctor: {
+          connect: {
+            id: creator_id,
+          },
         },
-      });
-      if (res) {
-        ctx.body = res;
-        ctx.status = 200;
-      } else {
-        ctx.status = 404;
-      }
-    } catch (error) {
-      ctx.status = 500;
-      console.log(error);
-    }
+        chief_complaint,
+        present_illness,
+        examination,
+        differential_diagnosis,
+        ix,
+        management,
+        notes,
+      },
+    });
+    console.log(res);
+
+    const res2 = await prisma.patient.update({
+      where: {
+        id: patient_id,
+      },
+      data: {
+        social_hx,
+        familyHx,
+      },
+    });
+    console.log(res2);
+
+    // ctx.body = res;
+    ctx.status = 200;
   }
 );
+
+//
+router.post("/upload/:user_id", jwtAuthMiddleware, async (ctx: any) => {});

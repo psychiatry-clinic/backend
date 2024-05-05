@@ -62,8 +62,12 @@ model Patient {
   siblings      Int?
   order         Int?
   notes         String?
-  familyHx      Json?
+  family_hx     Json?
   pastHx        Json?
+  occupation_hx Json?
+  forensic_hx   Json?
+  social_hx     Json?
+  personal_hx   Json?
   visits        Visit[]
   prescriptions Prescription[]
   demographics  Demographics[]
@@ -75,7 +79,7 @@ model Patient {
 model Doctor {
   id           Int            @id @default(autoincrement())
   name         String
-  phone        String
+  phone        String?
   avatar       String?
   visits       Visit[]
   user         User[]
@@ -113,24 +117,16 @@ model Visit {
   id                     Int           @id @default(autoincrement())
   patient                Patient       @relation(fields: [patientId], references: [id])
   patientId              Int
-  doctor                 Doctor?       @relation(fields: [doctorId], references: [id])
-  doctorId               Int?
+  doctor                 Doctor        @relation(fields: [doctorId], references: [id])
+  doctorId               Int
   clinic                 Clinic
   active                 Boolean
   duration               Int? // Duration of the appointment in minutes
   chief_complaint        Json?
   present_illness        Json?
-  suicide                Json?
-  past_hx                Json?
-  occupation_hx          Json?
-  forensic_hx            Json?
-  social_hx              Json?
-  drug_hx                String?
-  substance              String?
-  personal_hx            String?
   examination            Json?
   differential_diagnosis String?
-  management             String?
+  management             Json?
   ix                     Json?
   prescription           Prescription? @relation(fields: [prescriptionId], references: [id])
   prescriptionId         Int?
