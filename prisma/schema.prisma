@@ -63,7 +63,7 @@ model Patient {
   order         Int?
   notes         String?
   family_hx     Json?
-  pastHx        Json?
+  past_hx        Json?
   occupation_hx Json?
   forensic_hx   Json?
   social_hx     Json?

@@ -187,7 +187,7 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     related,
     siblings,
     order,
-    familyHx,
+    family_hx,
     notes,
     marital_status,
     children,
@@ -269,7 +269,11 @@ router.post(
       management,
       notes,
       social_hx,
-      familyHx,
+      family_hx,
+      past_hx,
+      occupation_hx,
+      forensic_hx,
+      personal_hx,
     } = ctx.request.body;
 
     const res = await prisma.visit.create({
@@ -303,7 +307,11 @@ router.post(
       },
       data: {
         social_hx,
-        familyHx,
+        family_hx,
+        past_hx,
+        occupation_hx,
+        forensic_hx,
+        personal_hx,
       },
     });
     console.log(res2);
