@@ -123,7 +123,7 @@ model Visit {
   chief_complaint        Json?
   present_illness        Json?
   examination            Json?
-  differential_diagnosis String?
+  ddx                    Json?
   management             Json?
   ix                     Json?
   consultations          Json?
@@ -132,7 +132,7 @@ model Visit {
   tests                  Test[]
   therapyId              Int?
   therapy                Therapy?      @relation(fields: [therapyId], references: [id])
-  notes                  String?
+  notes                  Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 }

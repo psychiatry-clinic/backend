@@ -124,7 +124,13 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
         id: patient_id,
       },
       include: {
-        visits: true,
+        visits: {
+          include: {
+            prescription: true,
+            tests: true,
+            doctor: true,
+          },
+        },
         demographics: true,
         prescriptions: true,
         tests: true,
@@ -149,6 +155,7 @@ router.get(
           id: visit_id,
         },
         include: {
+          patient: true,
           prescription: true,
           tests: true,
           doctor: true,
@@ -263,8 +270,9 @@ router.post(
         chief_complaint,
         present_illness,
         examination,
-        differential_diagnosis,
+        ddx,
         ix,
+        consultations,
         management,
         notes,
         social_hx,
@@ -292,7 +300,8 @@ router.post(
           chief_complaint,
           present_illness,
           examination,
-          differential_diagnosis,
+          consultations,
+          ddx,
           ix,
           management,
           notes,
@@ -335,10 +344,8 @@ router.post(
       avatar,
       father_dob,
       father_edu,
-      father_age,
       father_work,
       mother_dob,
-      mother_age,
       mother_edu,
       mother_work,
       related,
@@ -401,6 +408,43 @@ router.post(
     } catch (error) {
       console.log(error);
       ctx.status = 500;
+    }
+  }
+);
+
+// edit visit
+router.post(
+  "/visits-edit/:user_id/:visit_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    try {
+      const id = +ctx.params.visit_id;
+      const {
+        chief_complaint,
+        present_illness,
+        examination,
+        ddx,
+        notes,
+        consultations,
+      } = ctx.request.body;
+      const res = await prisma.visit.update({
+        where: {
+          id: id,
+        },
+        data: {
+          chief_complaint,
+          present_illness,
+          examination,
+          ddx,
+          consultations,
+          notes,
+        },
+      });
+      console.log(res);
+      ctx.status = 200;
+    } catch (error) {
+      ctx.status = 500;
+      console.log(error);
     }
   }
 );
