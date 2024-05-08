@@ -46,15 +46,13 @@ model Patient {
   doctorId      Int
   doctor        Doctor         @relation(fields: [doctorId], references: [id])
   name          String
-  dob           Int
+  dob           DateTime
   gender        Gender
   avatar        String?        @db.VarChar(1000)
   phone         String?
-  father_dob    Int?
-  mother_dob    Int?
-  father_age    Int?
+  father_dob    DateTime?
+  mother_dob    DateTime?
   father_edu    String?
-  mother_age    Int?
   father_work   String?
   mother_work   String?
   mother_edu    String?

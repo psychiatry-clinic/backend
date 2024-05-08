@@ -218,10 +218,8 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
             avatar,
             father_dob,
             father_edu,
-            father_age,
             father_work,
             mother_dob,
-            mother_age,
             mother_edu,
             mother_work,
             related,
@@ -316,6 +314,89 @@ router.post(
       });
 
       // ctx.body = res;
+      ctx.status = 200;
+    } catch (error) {
+      console.log(error);
+      ctx.status = 500;
+    }
+  }
+);
+
+// edit patient
+router.post(
+  "/patients-edit/:user_id/:patient_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    const {
+      name,
+      dob,
+      gender,
+      phone,
+      avatar,
+      father_dob,
+      father_edu,
+      father_age,
+      father_work,
+      mother_dob,
+      mother_age,
+      mother_edu,
+      mother_work,
+      related,
+      siblings,
+      order,
+      family_hx,
+      notes,
+      demographics_id,
+      marital_status,
+      children,
+      residence,
+      occupation,
+      education,
+    } = ctx.request.body;
+
+    const patient_id = ctx.params.patient_id;
+    console.log("father_dob");
+    console.log(father_dob);
+
+    try {
+      const res = await prisma.patient.update({
+        where: {
+          id: +patient_id,
+        },
+        data: {
+          name,
+          dob,
+          gender,
+          phone,
+          avatar,
+          father_dob: new Date(Date.UTC(father_dob, 0, 1)),
+          father_edu,
+          father_work,
+          mother_dob: new Date(Date.UTC(mother_dob, 0, 1)),
+          mother_edu,
+          mother_work,
+          related,
+          siblings,
+          order,
+          family_hx,
+          notes,
+          demographics: {
+            update: {
+              where: {
+                id: demographics_id,
+              },
+              data: {
+                marital_status,
+                children,
+                residence,
+                occupation,
+                education,
+              },
+            },
+          },
+        },
+      });
+      console.log(res);
       ctx.status = 200;
     } catch (error) {
       console.log(error);
