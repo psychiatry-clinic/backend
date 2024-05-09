@@ -58,6 +58,7 @@ model Patient {
   mother_edu    String?
   related       Boolean?
   siblings      Int?
+  development   Json?
   order         Int?
   notes         String?
   family_hx     Json?

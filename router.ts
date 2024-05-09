@@ -281,8 +281,10 @@ router.post(
         occupation_hx,
         forensic_hx,
         personal_hx,
+        development,
       } = ctx.request.body;
-
+      console.log("development");
+      console.log(development);
       const res = await prisma.visit.create({
         data: {
           active: true,
@@ -319,6 +321,7 @@ router.post(
           occupation_hx,
           forensic_hx,
           personal_hx,
+          development,
         },
       });
 
@@ -414,11 +417,12 @@ router.post(
 
 // edit visit
 router.post(
-  "/visits-edit/:user_id/:visit_id",
+  "/visits-edit/:user_id/:visit_id/:patient_id",
   jwtAuthMiddleware,
   async (ctx: any) => {
     try {
       const id = +ctx.params.visit_id;
+      const patient_id = +ctx.params.patient_id;
       const {
         chief_complaint,
         present_illness,
@@ -426,6 +430,15 @@ router.post(
         ddx,
         notes,
         consultations,
+        ix,
+        management,
+        social_hx,
+        family_hx,
+        personal_hx,
+        forensic_hx,
+        occupation_hx,
+        past_hx,
+        development,
       } = ctx.request.body;
       const res = await prisma.visit.update({
         where: {
@@ -438,9 +451,26 @@ router.post(
           ddx,
           consultations,
           notes,
+          ix,
+          management,
+          patient: {
+            update: {
+              where: {
+                id: patient_id,
+              },
+              data: {
+                family_hx,
+                forensic_hx,
+                occupation_hx,
+                social_hx,
+                personal_hx,
+                past_hx,
+                development,
+              },
+            },
+          },
         },
       });
-      console.log(res);
       ctx.status = 200;
     } catch (error) {
       ctx.status = 500;
