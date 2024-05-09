@@ -5,7 +5,6 @@ const jwtAuthMiddleware = (ctx: any, next: any) => {
   // Check if the request contains the API token in the headers
   const token = ctx.headers.authorization;
   const user_id = +ctx.params.user_id;
-  console.log(user_id);
 
   if (token && user_id) {
     try {

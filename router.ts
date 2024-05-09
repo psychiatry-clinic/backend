@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 import { PrismaClient } from "@prisma/client";
 
 import generateJWT from "./utilities/generateJWT";
@@ -35,6 +37,8 @@ router.get("/", async (ctx: any) => {
 
 router.post("/login", async (ctx: any) => {
   const { username, password } = ctx.request.body;
+  console.log("www");
+
   let user = await prisma.user.findFirst({
     where: {
       username: username,
@@ -117,8 +121,8 @@ router.get("/search/:user_id", jwtAuthMiddleware, async (ctx: any) => {
 
 router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
   const patient_id = +ctx.params.patient_id;
-  console.log(patient_id);
   try {
+    deactivateOldVisits();
     const res = await prisma.patient.findUnique({
       where: {
         id: patient_id,
@@ -149,6 +153,7 @@ router.get(
   jwtAuthMiddleware,
   async (ctx: any) => {
     try {
+      deactivateOldVisits();
       const visit_id = +ctx.params.visit_id;
       const res = await prisma.visit.findUnique({
         where: {
@@ -440,6 +445,9 @@ router.post(
         past_hx,
         development,
       } = ctx.request.body;
+      console.log("family_hx");
+      console.log(family_hx);
+
       const res = await prisma.visit.update({
         where: {
           id: id,
@@ -479,5 +487,70 @@ router.post(
   }
 );
 
+// delete patient
+router.delete(
+  "/patient-delete/:user_id/:patient_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    console.log("delete");
+
+    try {
+      const user_id = +ctx.params.user_id;
+      const patient_id = +ctx.params.patient_id;
+      const user = await prisma.user.findUnique({
+        where: {
+          id: user_id,
+        },
+      });
+      if (user && user.role === "ADMIN") {
+        const res = await prisma.patient.delete({
+          where: {
+            id: patient_id,
+          },
+        });
+        console.log(res);
+        ctx.status = 201;
+      } else {
+        ctx.status = 404;
+      }
+    } catch (error) {
+      console.log(error);
+      ctx.status = 500;
+    }
+  }
+);
+
 //
 router.post("/upload/:user_id", jwtAuthMiddleware, async (ctx: any) => {});
+
+// deactivate visits
+
+async function deactivateOldVisits() {
+  try {
+    const hours = process.env.TIME ? (+process.env.TIME as number) : 1;
+    const eightHoursAgo = new Date(Date.now() - hours * 60 * 60 * 1000); // 8 hours ago
+    const oldVisits = await prisma.visit.findMany({
+      where: {
+        createdAt: {
+          lt: eightHoursAgo,
+        },
+        active: true,
+      },
+    });
+
+    for (const visit of oldVisits) {
+      await prisma.visit.update({
+        where: {
+          id: visit.id,
+        },
+        data: {
+          active: false,
+        },
+      });
+    }
+
+    console.log(`${oldVisits.length} old visits deactivated.`);
+  } catch (error) {
+    console.error("Error deactivating old visits:", error);
+  }
+}

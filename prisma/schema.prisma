@@ -131,6 +131,7 @@ model Visit {
   prescription           Prescription? @relation(fields: [prescriptionId], references: [id])
   prescriptionId         Int?
   tests                  Test[]
+  therapyRequest         Boolean?
   therapyId              Int?
   therapy                Therapy?      @relation(fields: [therapyId], references: [id])
   notes                  Json?
