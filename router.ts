@@ -60,8 +60,16 @@ router.post("/login", async (ctx: any) => {
   }
 });
 
+//get patients
 router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
+  const user_id = +ctx.params.user_id;
   try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: user_id,
+      },
+    });
+
     const itemsPerPage = parseInt(ctx.query.itemsPerPage) || 10; // Default to 10 items per page if not provided
     const page = parseInt(ctx.query.page) || 1;
     const q = ctx.query.q;
@@ -81,30 +89,60 @@ router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
         ],
       };
     }
+    if (user?.role === "PSYCHOLOGIST") {
+      const [patients, totalPatients] = await Promise.all([
+        prisma.patient.findMany({
+          where: {
+            AND: [
+              whereCondition,
+              {
+                visits: {
+                  some: {
+                    therapyRequest: true,
+                  },
+                },
+              },
+            ],
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: itemsPerPage,
+          skip: offset,
+          include: {
+            visits: true, // Filter visits where active is true
+          },
+        }),
+        prisma.patient.count(),
+      ]);
 
-    const [patients, totalPatients] = await Promise.all([
-      prisma.patient.findMany({
-        where: {
-          AND: [
-            whereCondition, // Include the constructed where condition
-          ],
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: itemsPerPage,
-        skip: offset,
-        include: {
-          visits: true,
-        },
-      }),
-      prisma.patient.count(),
-    ]);
+      ctx.body = {
+        total: totalPatients,
+        patients: patients,
+      };
+    } else {
+      const [patients, totalPatients] = await Promise.all([
+        prisma.patient.findMany({
+          where: {
+            AND: [whereCondition],
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: itemsPerPage,
+          skip: offset,
+          include: {
+            visits: true, // Filter visits where active is true
+          },
+        }),
+        prisma.patient.count(),
+      ]);
 
-    ctx.body = {
-      total: totalPatients,
-      patients: patients,
-    };
+      ctx.body = {
+        total: totalPatients,
+        patients: patients,
+      };
+    }
   } catch (error) {
     console.log(error);
     ctx.status = 500;
@@ -119,28 +157,56 @@ router.get("/search/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   ctx.body = res;
 });
 
+// get patient data
 router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
   const patient_id = +ctx.params.patient_id;
+  const user_id = +ctx.params.user_id;
   try {
-    deactivateOldVisits();
-    const res = await prisma.patient.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
-        id: patient_id,
-      },
-      include: {
-        visits: {
-          include: {
-            prescription: true,
-            tests: true,
-            doctor: true,
-          },
-        },
-        demographics: true,
-        prescriptions: true,
-        tests: true,
+        id: user_id,
       },
     });
-    ctx.body = res;
+
+    if (user) {
+      user.role === "PSYCHOLOGIST";
+      const res = await prisma.patient.findUnique({
+        where: {
+          id: patient_id,
+        },
+        include: {
+          visits: {
+            where: {
+              active: true,
+            },
+          },
+          demographics: true,
+        },
+      });
+      ctx.status = 200;
+      ctx.body = res;
+    } else {
+      deactivateOldVisits();
+      const res = await prisma.patient.findUnique({
+        where: {
+          id: patient_id,
+        },
+        include: {
+          visits: {
+            include: {
+              prescription: true,
+              tests: true,
+              doctor: true,
+            },
+          },
+          demographics: true,
+          prescriptions: true,
+          tests: true,
+        },
+      });
+      ctx.status = 200;
+      ctx.body = res;
+    }
   } catch (error) {
     console.log(error);
     ctx.status = 500;
@@ -160,7 +226,12 @@ router.get(
           id: visit_id,
         },
         include: {
-          patient: true,
+          patient: {
+            include: {
+              demographics: true,
+            },
+          },
+          therapy: true,
           prescription: true,
           tests: true,
           doctor: true,
@@ -444,6 +515,7 @@ router.post(
         occupation_hx,
         past_hx,
         development,
+        therapyRequest,
       } = ctx.request.body;
       console.log("family_hx");
       console.log(family_hx);
@@ -460,6 +532,7 @@ router.post(
           consultations,
           notes,
           ix,
+          therapyRequest,
           management,
           patient: {
             update: {
@@ -492,8 +565,6 @@ router.delete(
   "/patient-delete/:user_id/:patient_id",
   jwtAuthMiddleware,
   async (ctx: any) => {
-    console.log("delete");
-
     try {
       const user_id = +ctx.params.user_id;
       const patient_id = +ctx.params.patient_id;
@@ -520,11 +591,84 @@ router.delete(
   }
 );
 
-//
+// upload
 router.post("/upload/:user_id", jwtAuthMiddleware, async (ctx: any) => {});
 
-// deactivate visits
+// therapy
+router.post(
+  "/therapy/:user_id/:visit_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    try {
+      const user_id = +ctx.params.user_id;
+      const visit_id = +ctx.params.visit_id;
+      const { notes, clinic } = ctx.request.body;
+      // Check if therapy notes already exist for the visit
+      let therapy = await prisma.therapy.findFirst({
+        where: {
+          Visit: {
+            some: {
+              id: visit_id,
+            },
+          },
+        },
+      });
 
+      if (therapy) {
+        // If therapy notes exist, update them
+        therapy.notes = notes;
+        await prisma.therapy.update({
+          where: {
+            id: therapy.id,
+          },
+          data: {
+            notes: notes,
+          },
+        });
+        console.log("therapy 1");
+        console.log(therapy);
+        ctx.status = 200;
+      } else {
+        // If therapy notes don't exist, create them
+        therapy = await prisma.therapy.create({
+          data: {
+            Visit: {
+              connect: {
+                id: visit_id,
+              },
+            },
+            psychologist: {
+              connect: {
+                id: user_id,
+              },
+            },
+            notes: notes,
+            clinic: clinic,
+          },
+        });
+        if (therapy) {
+          console.log("therapy 2");
+          console.log(therapy);
+          ctx.status = 200;
+        }
+      }
+
+      ctx.status = 200;
+      ctx.body = {
+        success: true,
+        data: therapy,
+      };
+    } catch (error) {
+      ctx.status = 500;
+      ctx.body = {
+        success: false,
+        error: "Internal Server Error",
+      };
+    }
+  }
+);
+
+// deactivate visits
 async function deactivateOldVisits() {
   try {
     const hours = process.env.TIME ? (+process.env.TIME as number) : 1;
@@ -548,8 +692,6 @@ async function deactivateOldVisits() {
         },
       });
     }
-
-    console.log(`${oldVisits.length} old visits deactivated.`);
   } catch (error) {
     console.error("Error deactivating old visits:", error);
   }

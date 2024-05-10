@@ -62,7 +62,7 @@ model Patient {
   order         Int?
   notes         String?
   family_hx     Json?
-  past_hx        Json?
+  past_hx       Json?
   occupation_hx Json?
   forensic_hx   Json?
   social_hx     Json?
@@ -113,30 +113,30 @@ model Demographics {
 }
 
 model Visit {
-  id                     Int           @id @default(autoincrement())
-  patient                Patient       @relation(fields: [patientId], references: [id])
-  patientId              Int
-  doctor                 Doctor        @relation(fields: [doctorId], references: [id])
-  doctorId               Int
-  clinic                 Clinic
-  active                 Boolean
-  duration               Int? // Duration of the appointment in minutes
-  chief_complaint        Json?
-  present_illness        Json?
-  examination            Json?
-  ddx                    Json?
-  management             Json?
-  ix                     Json?
-  consultations          Json?
-  prescription           Prescription? @relation(fields: [prescriptionId], references: [id])
-  prescriptionId         Int?
-  tests                  Test[]
-  therapyRequest         Boolean?
-  therapyId              Int?
-  therapy                Therapy?      @relation(fields: [therapyId], references: [id])
-  notes                  Json?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  id              Int           @id @default(autoincrement())
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  patientId       Int
+  doctor          Doctor        @relation(fields: [doctorId], references: [id])
+  doctorId        Int
+  clinic          Clinic
+  active          Boolean
+  duration        Int? // Duration of the appointment in minutes
+  chief_complaint Json?
+  present_illness Json?
+  examination     Json?
+  ddx             Json?
+  management      Json?
+  ix              Json?
+  consultations   Json?
+  prescription    Prescription? @relation(fields: [prescriptionId], references: [id])
+  prescriptionId  Int?
+  tests           Test[]
+  therapyRequest  Boolean?
+  therapyId       Int?
+  therapy         Therapy?      @relation(fields: [therapyId], references: [id])
+  notes           Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Therapy {
