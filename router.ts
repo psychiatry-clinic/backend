@@ -37,7 +37,7 @@ router.get("/", async (ctx: any) => {
 
 router.post("/login", async (ctx: any) => {
   const { username, password } = ctx.request.body;
-  console.log("www");
+  console.log("login");
 
   let user = await prisma.user.findFirst({
     where: {
@@ -151,9 +151,7 @@ router.get("/patients/:user_id", jwtAuthMiddleware, async (ctx: any) => {
 
 router.get("/search/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   const { query } = ctx.params.query;
-  console.log(query);
   const res = await prisma.patient.findMany({});
-  console.log(res);
   ctx.body = res;
 });
 
@@ -359,8 +357,6 @@ router.post(
         personal_hx,
         development,
       } = ctx.request.body;
-      console.log("development");
-      console.log(development);
       const res = await prisma.visit.create({
         data: {
           active: true,
@@ -441,8 +437,6 @@ router.post(
     } = ctx.request.body;
 
     const patient_id = ctx.params.patient_id;
-    console.log("father_dob");
-    console.log(father_dob);
 
     try {
       const res = await prisma.patient.update({
@@ -482,7 +476,6 @@ router.post(
           },
         },
       });
-      console.log(res);
       ctx.status = 200;
     } catch (error) {
       console.log(error);
@@ -517,8 +510,6 @@ router.post(
         development,
         therapyRequest,
       } = ctx.request.body;
-      console.log("family_hx");
-      console.log(family_hx);
 
       const res = await prisma.visit.update({
         where: {
@@ -579,7 +570,6 @@ router.delete(
             id: patient_id,
           },
         });
-        console.log(res);
         ctx.status = 201;
       } else {
         ctx.status = 404;
@@ -625,8 +615,6 @@ router.post(
             notes: notes,
           },
         });
-        console.log("therapy 1");
-        console.log(therapy);
         ctx.status = 200;
       } else {
         // If therapy notes don't exist, create them
@@ -647,8 +635,6 @@ router.post(
           },
         });
         if (therapy) {
-          console.log("therapy 2");
-          console.log(therapy);
           ctx.status = 200;
         }
       }
