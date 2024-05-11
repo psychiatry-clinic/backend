@@ -4,8 +4,7 @@
   "description": "",
   "main": "/dist/server.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "build": "npm i typescript && npx tsc"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
