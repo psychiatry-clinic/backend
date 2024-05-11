@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt, { JwtPayload } from "jsonwebtoken";
 const secretKey = process.env.SECRET_KEY || "alnoorimustafa";
 
 const jwtAuthMiddleware = (ctx: any, next: any) => {
@@ -9,7 +9,10 @@ const jwtAuthMiddleware = (ctx: any, next: any) => {
   if (token && user_id) {
     try {
       // Verify the JWT with the provided secret key
-      const decoded = jwt.verify(token.replace("Bearer ", ""), secretKey);
+      const decoded = jwt.verify(
+        token.replace("Bearer ", ""),
+        secretKey
+      ) as JwtPayload;
 
       if (decoded.id !== user_id) {
         ctx.status = 401;

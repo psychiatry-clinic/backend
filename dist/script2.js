@@ -1,7 +1,6 @@
+"use strict";
 // import { PrismaClient } from "@prisma/client";
-
 // const prisma = new PrismaClient();
-
 // const seedData = async () => {
 //   // Seed Users
 //   const users = [];
@@ -23,7 +22,6 @@
 //     });
 //     // users.push(user);
 //   }
-
 // Seed Patients
 // const patients = [];
 // for (let i = 0; i < 20; i++) {
@@ -41,7 +39,6 @@
 //     },
 //   });
 // }
-
 // Seed Visits
 // const visits = [];
 // for (let i = 0; i < 30; i++) {
@@ -66,7 +63,6 @@
 //   });
 //   visits.push(visit);
 // }
-
 // Seed Tests
 // const tests = [];
 // for (let i = 0; i < 30; i++) {
@@ -92,7 +88,6 @@
 //   });
 //   tests.push(test);
 // }
-
 // Seed Prescriptions
 // const prescriptions = [];
 // for (let i = 0; i < 20; i++) {
@@ -114,7 +109,6 @@
 //   });
 //   prescriptions.push(prescription);
 // }
-
 // Seed Medications
 // const medications = [];
 // for (let i = 0; i < 30; i++) {
@@ -128,7 +122,6 @@
 //   });
 //   medications.push(medication);
 // }
-
 // Seed Sessions
 //   const sessions = [];
 //   for (let i = 0; i < 10; i++) {
@@ -146,10 +139,8 @@
 //     });
 //     sessions.push(session);
 //   }
-
 //   console.log("Data seeded successfully");
 // };
-
 // seedData()
 //   .catch((error) => {
 //     console.error("Error seeding data:", error);

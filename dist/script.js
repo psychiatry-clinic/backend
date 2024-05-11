@@ -1,8 +1,7 @@
+"use strict";
 // import { PrismaClient, PrismaPromise } from "@prisma/client";
 // import { faker } from "@faker-js/faker";
-
 // const prisma = new PrismaClient();
-
 // const seedData = async () => {
 //   // Seed Clinics
 //   // const clinicA = await prisma.clinic.create({
@@ -11,16 +10,13 @@
 //   //     location: "Location A",
 //   //   },
 //   // });
-
 //   // const clinicB = await prisma.clinic.create({
 //   //   data: {
 //   //     name: "Clinic B",
 //   //     location: "Location B",
 //   //   },
 //   // });
-
 //   // const clinics = [clinicA, clinicB];
-
 //   // Seed Doctors
 //   const doctors = [];
 //   for (let i = 0; i < 5; i++) {
@@ -32,7 +28,6 @@
 //     });
 //     doctors.push(doctor);
 //   }
-
 //   // Seed Psychologists
 //   const psychologists = [];
 //   for (let i = 0; i < 5; i++) {
@@ -44,7 +39,6 @@
 //     });
 //     psychologists.push(psychologist);
 //   }
-
 //   // Seed Users
 //   const users = [];
 //   for (let i = 0; i < 10; i++) {
@@ -63,7 +57,6 @@
 //     });
 //     users.push(user);
 //   }
-
 //   // Seed Patients
 //   const patients = [];
 //   for (let i = 0; i < 20; i++) {
@@ -78,7 +71,6 @@
 //     });
 //     patients.push(patient);
 //   }
-
 //   // Seed Visits
 //   const visits = [];
 //   for (let i = 0; i < 30; i++) {
@@ -95,7 +87,6 @@
 //     });
 //     visits.push(visit);
 //   }
-
 //   // Seed Tests
 //   const tests = [];
 //   for (let i = 0; i < 30; i++) {
@@ -112,7 +103,6 @@
 //     });
 //     tests.push(test);
 //   }
-
 //   // Seed Prescriptions
 //   const prescriptions = [];
 //   for (let i = 0; i < 20; i++) {
@@ -126,7 +116,6 @@
 //     });
 //     prescriptions.push(prescription);
 //   }
-
 //   // Seed Medications
 //   const medications = [];
 //   for (let i = 0; i < 30; i++) {
@@ -140,10 +129,8 @@
 //     });
 //     medications.push(medication);
 //   }
-
 //   console.log("Data seeded successfully");
 // };
-
 // seedData()
 //   .catch((error) => {
 //     console.error("Error seeding data:", error);

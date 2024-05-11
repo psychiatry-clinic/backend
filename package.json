@@ -2,9 +2,9 @@
   "name": "new-psychiatry",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "/dist/server.js",
   "scripts": {
-    "start": "npx ts-node server.ts"
+    "start": "tsc && node dist/server.js"
   },
   "keywords": [],
   "author": "",
