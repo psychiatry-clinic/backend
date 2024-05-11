@@ -166,8 +166,7 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
       },
     });
 
-    if (user) {
-      user.role === "PSYCHOLOGIST";
+    if (user && user.role === "PSYCHOLOGIST") {
       const res = await prisma.patient.findUnique({
         where: {
           id: patient_id,
