@@ -120,7 +120,8 @@ model Visit {
   doctorId        Int
   clinic          Clinic
   active          Boolean
-  duration        Int? // Duration of the appointment in minutes
+  duration        Int?
+  follow_up       Boolean       @default(false)
   chief_complaint Json?
   present_illness Json?
   examination     Json?

@@ -356,6 +356,7 @@ router.post(
         forensic_hx,
         personal_hx,
         development,
+        follow_up,
       } = ctx.request.body;
       const res = await prisma.visit.create({
         data: {
@@ -371,6 +372,7 @@ router.post(
               id: creator_id,
             },
           },
+          follow_up,
           chief_complaint,
           present_illness,
           examination,
@@ -509,6 +511,7 @@ router.post(
         past_hx,
         development,
         therapyRequest,
+        follow_up,
       } = ctx.request.body;
 
       const res = await prisma.visit.update({
@@ -525,6 +528,7 @@ router.post(
           ix,
           therapyRequest,
           management,
+          follow_up,
           patient: {
             update: {
               where: {
