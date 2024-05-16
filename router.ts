@@ -43,11 +43,13 @@ router.post("/login", async (ctx: any) => {
     where: {
       username: username,
     },
+    include: {
+      clinic: true,
+    },
   });
   if (user && user.password === password) {
     const token = await generateJWT(user);
     user = { ...user, password: "nice try" };
-
     ctx.status = 200;
     ctx.body = {
       accessToken: token,
@@ -156,7 +158,7 @@ router.get("/search/:user_id", jwtAuthMiddleware, async (ctx: any) => {
 });
 
 // get patient data
-router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
+router.get("/patient/:user_id/:patient_id", async (ctx: any) => {
   const patient_id = +ctx.params.patient_id;
   const user_id = +ctx.params.user_id;
   try {
@@ -177,6 +179,9 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
             where: {
               active: true,
             },
+            include: {
+              clinic: true,
+            },
           },
           demographics: true,
         },
@@ -192,6 +197,7 @@ router.get("/patients/:user_id/:patient_id", async (ctx: any) => {
         include: {
           visits: {
             include: {
+              clinic: true,
               prescription: true,
               tests: true,
               doctor: true,
@@ -229,10 +235,48 @@ router.get(
               demographics: true,
             },
           },
+          clinic: true,
           therapy: true,
           prescription: true,
           tests: true,
           doctor: true,
+        },
+      });
+      if (res) {
+        ctx.body = res;
+        ctx.status = 200;
+      } else {
+        ctx.status = 404;
+      }
+    } catch (error) {
+      ctx.status = 500;
+      console.log(error);
+    }
+  }
+);
+
+// get fields and suggestions
+router.get(
+  "/fields-suggestions/:user_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    try {
+      const user_id = +ctx.params.user_id;
+      const user = await prisma.user.findUnique({
+        where: {
+          id: user_id,
+        },
+        include: {
+          clinic: true,
+        },
+      });
+      if (!user) return (ctx.status = 404);
+      const res = await prisma.field.findMany({
+        where: {
+          clinic: user.clinic,
+        },
+        include: {
+          suggestions: true,
         },
       });
       if (res) {
@@ -259,10 +303,8 @@ router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
     avatar,
     father_dob,
     father_edu,
-    father_age,
     father_work,
     mother_dob,
-    mother_age,
     mother_edu,
     mother_work,
     related,
@@ -357,11 +399,12 @@ router.post(
         personal_hx,
         development,
         follow_up,
+        clinicId,
       } = ctx.request.body;
+
       const res = await prisma.visit.create({
         data: {
           active: true,
-          clinic: "Kadhimiya",
           patient: {
             connect: {
               id: patient_id,
@@ -370,6 +413,11 @@ router.post(
           doctor: {
             connect: {
               id: creator_id,
+            },
+          },
+          clinic: {
+            connect: {
+              id: clinicId,
             },
           },
           follow_up,

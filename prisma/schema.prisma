@@ -11,29 +11,39 @@ datasource db {
 }
 
 model User {
-  id             Int           @id @default(autoincrement())
-  username       String        @unique
-  password       String
-  role           UserRole
-  doctor         Doctor?       @relation(fields: [doctorId], references: [id])
-  doctorId       Int?
-  psychologist   Psychologist? @relation(fields: [psychologistId], references: [id])
-  psychologistId Int?
-  clinic         Clinic
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id           Int            @id @default(autoincrement())
+  username     String         @unique
+  password     String
+  fullName     String
+  phone        String?
+  admin        Boolean        @default(false)
+  avatar       String?
+  role         UserRole
+  visits       Visit[]
+  Prescription Prescription[]
+  Patient      Patient[]
+  therapy      Therapy[]
+  clinic       Clinic         @relation(fields: [clinicId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  clinicId     Int
 }
 
 enum UserRole {
   ADMIN
   DOCTOR
   PSYCHOLOGIST
+  PHARMACIST
+  NURSE
 }
 
-enum Clinic {
-  Kadhimiya
-  BaghdadTeachingHospital
-  AutismCenter
+model Clinic {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  user    User[]
+  Visit   Visit[]
+  Therapy Therapy[]
+  field   field[]
 }
 
 enum Gender {
@@ -44,7 +54,7 @@ enum Gender {
 model Patient {
   id            Int            @id @default(autoincrement())
   doctorId      Int
-  doctor        Doctor         @relation(fields: [doctorId], references: [id])
+  doctor        User           @relation(fields: [doctorId], references: [id])
   name          String
   dob           DateTime
   gender        Gender
@@ -75,29 +85,6 @@ model Patient {
   updatedAt     DateTime       @updatedAt
 }
 
-model Doctor {
-  id           Int            @id @default(autoincrement())
-  name         String
-  phone        String?
-  avatar       String?
-  visits       Visit[]
-  user         User[]
-  Prescription Prescription[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  Patient      Patient[]
-}
-
-model Psychologist {
-  id        Int       @id @default(autoincrement())
-  name      String
-  phone     String
-  user      User[]
-  therapy   Therapy[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
 model Demographics {
   id             Int      @id @default(autoincrement())
   patient        Patient? @relation(fields: [patientId], references: [id])
@@ -116,9 +103,10 @@ model Visit {
   id              Int           @id @default(autoincrement())
   patient         Patient       @relation(fields: [patientId], references: [id])
   patientId       Int
-  doctor          Doctor        @relation(fields: [doctorId], references: [id])
+  doctor          User          @relation(fields: [doctorId], references: [id])
   doctorId        Int
-  clinic          Clinic
+  clinicId        Int
+  clinic          Clinic        @relation(fields: [clinicId], references: [id])
   active          Boolean
   duration        Int?
   follow_up       Boolean       @default(false)
@@ -141,21 +129,22 @@ model Visit {
 }
 
 model Therapy {
-  id             Int           @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   notes          String
-  clinic         Clinic
-  psychologist   Psychologist? @relation(fields: [psychologistId], references: [id])
+  clinic         Clinic   @relation(fields: [clinicId], references: [id])
+  psychologist   User?    @relation(fields: [psychologistId], references: [id])
   psychologistId Int?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   Visit          Visit[]
+  clinicId       Int
 }
 
 model Prescription {
   id           Int          @id @default(autoincrement())
   patient      Patient?     @relation(fields: [patientId], references: [id])
   patientId    Int?
-  doctor       Doctor       @relation(fields: [doctorId], references: [id])
+  doctor       User         @relation(fields: [doctorId], references: [id])
   doctorId     Int
   medications  Medication[]
   dosage       String
@@ -188,4 +177,23 @@ model Test {
   visitId   Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model field {
+  id          Int           @id @default(autoincrement())
+  name        String
+  type        String
+  order       Int
+  clinic      Clinic        @relation(fields: [clinicId], references: [id])
+  suggestions Suggestions[]
+  clinicId    Int
+}
+
+model Suggestions {
+  id      Int    @id @default(autoincrement())
+  text    String
+  color   String
+  order   Int
+  field   field? @relation(fields: [fieldId], references: [id])
+  fieldId Int?
 }
