@@ -38,12 +38,13 @@ enum UserRole {
 }
 
 model Clinic {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  user    User[]
-  Visit   Visit[]
-  Therapy Therapy[]
-  field   field[]
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  user      User[]
+  Visit     Visit[]
+  Therapy   Therapy[]
+  field     field[]
+  structure structure[]
 }
 
 enum Gender {
@@ -179,14 +180,25 @@ model Test {
   updatedAt DateTime @updatedAt
 }
 
+model structure {
+  id       Int     @id @default(autoincrement())
+  heading  String
+  order    Int
+  fields   field[]
+  clinicId Int
+  clinic   Clinic  @relation(fields: [clinicId], references: [id])
+}
+
 model field {
   id          Int           @id @default(autoincrement())
   name        String
-  type        String
   order       Int
-  clinic      Clinic        @relation(fields: [clinicId], references: [id])
+  type        String
   suggestions Suggestions[]
-  clinicId    Int
+  structure   structure?     @relation(fields: [structureId], references: [id])
+  structureId Int?
+  Clinic      Clinic?       @relation(fields: [clinicId], references: [id])
+  clinicId    Int?
 }
 
 model Suggestions {

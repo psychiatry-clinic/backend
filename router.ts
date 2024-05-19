@@ -292,6 +292,56 @@ router.get(
   }
 );
 
+// get suggestions
+router.get("/suggestions/:user_id", jwtAuthMiddleware, async (ctx: any) => {
+  try {
+    const res = await prisma.suggestions.findMany();
+    ctx.body = res;
+    ctx.status = 200;
+  } catch (error) {
+    console.log(error);
+    ctx.status = 500;
+  }
+});
+
+// post suggestions
+router.post(
+  "/suggestions-edit/:user_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    try {
+      const newSuggestion = ctx.request.body;
+      // const res = await prisma.suggestions.findMany();
+      const res = await prisma.suggestions.findFirst({
+        where: {
+          text: newSuggestion,
+        },
+      });
+      if (!res) {
+        const result = await prisma.suggestions.create({
+          data: {
+            text: newSuggestion,
+            color: "#000",
+            order: 1,
+            field: {
+              connect: {
+                id: 1,
+              },
+            },
+          },
+        });
+        ctx.body = result;
+        ctx.status = 200;
+      } else {
+        ctx.body = "already exist";
+      }
+    } catch (error) {
+      console.log(error);
+      ctx.status = 500;
+    }
+  }
+);
+
 // post new patient
 router.post("/patients-new/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   const creator_id = +ctx.params.user_id;
@@ -644,15 +694,11 @@ router.post(
     try {
       const user_id = +ctx.params.user_id;
       const visit_id = +ctx.params.visit_id;
-      const { notes, clinic } = ctx.request.body;
+      const { notes, clinicId } = ctx.request.body;
       // Check if therapy notes already exist for the visit
-      let therapy = await prisma.therapy.findFirst({
+      let therapy = await prisma.therapy.findUnique({
         where: {
-          Visit: {
-            some: {
-              id: visit_id,
-            },
-          },
+          id: visit_id,
         },
       });
 
@@ -683,7 +729,11 @@ router.post(
               },
             },
             notes: notes,
-            clinic: clinic,
+            clinic: {
+              connect: {
+                id: clinicId,
+              },
+            },
           },
         });
         if (therapy) {
