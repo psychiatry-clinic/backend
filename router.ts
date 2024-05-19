@@ -158,64 +158,73 @@ router.get("/search/:user_id", jwtAuthMiddleware, async (ctx: any) => {
 });
 
 // get patient data
-router.get("/patient/:user_id/:patient_id", async (ctx: any) => {
-  const patient_id = +ctx.params.patient_id;
-  const user_id = +ctx.params.user_id;
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: user_id,
-      },
-    });
+router.get(
+  "/patient/:user_id/:patient_id",
+  jwtAuthMiddleware,
+  async (ctx: any) => {
+    const user_id = +ctx.params.user_id;
+    const patient_id = +ctx.params.patient_id;
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: user_id,
+        },
+      });
 
-    if (!user) return (ctx.status = 404);
-    if (user.role === "PSYCHOLOGIST") {
-      const res = await prisma.patient.findUnique({
-        where: {
-          id: patient_id,
-        },
-        include: {
-          visits: {
-            where: {
-              active: true,
-            },
-            include: {
-              clinic: true,
-            },
+      console.log("====================================");
+      console.log(user);
+      console.log("====================================");
+
+      if (!user) return (ctx.status = 404);
+
+      if (user.role === "PSYCHOLOGIST") {
+        const res = await prisma.patient.findUnique({
+          where: {
+            id: patient_id,
           },
-          demographics: true,
-        },
-      });
-      ctx.status = 200;
-      ctx.body = res;
-    } else {
-      deactivateOldVisits();
-      const res = await prisma.patient.findUnique({
-        where: {
-          id: patient_id,
-        },
-        include: {
-          visits: {
-            include: {
-              clinic: true,
-              prescription: true,
-              tests: true,
-              doctor: true,
+          include: {
+            visits: {
+              where: {
+                active: true,
+              },
+              include: {
+                clinic: true,
+              },
             },
+            demographics: true,
           },
-          demographics: true,
-          prescriptions: true,
-          tests: true,
-        },
-      });
-      ctx.status = 200;
-      ctx.body = res;
+        });
+        ctx.status = 200;
+        ctx.body = res;
+      } else {
+        deactivateOldVisits();
+        const res = await prisma.patient.findUnique({
+          where: {
+            id: patient_id,
+          },
+          include: {
+            visits: {
+              include: {
+                clinic: true,
+                prescription: true,
+                tests: true,
+                doctor: true,
+              },
+            },
+            demographics: true,
+            prescriptions: true,
+            tests: true,
+          },
+        });
+        ctx.status = 200;
+        ctx.body = res;
+      }
+    } catch (error) {
+      console.log(error);
+      ctx.status = 500;
     }
-  } catch (error) {
-    console.log(error);
-    ctx.status = 500;
   }
-});
+);
 
 // get patient visits
 router.get(
