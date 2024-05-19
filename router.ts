@@ -255,43 +255,6 @@ router.get(
   }
 );
 
-// get fields and suggestions
-router.get(
-  "/fields-suggestions/:user_id",
-  jwtAuthMiddleware,
-  async (ctx: any) => {
-    try {
-      const user_id = +ctx.params.user_id;
-      const user = await prisma.user.findUnique({
-        where: {
-          id: user_id,
-        },
-        include: {
-          clinic: true,
-        },
-      });
-      if (!user) return (ctx.status = 404);
-      const res = await prisma.field.findMany({
-        where: {
-          clinic: user.clinic,
-        },
-        include: {
-          suggestions: true,
-        },
-      });
-      if (res) {
-        ctx.body = res;
-        ctx.status = 200;
-      } else {
-        ctx.status = 404;
-      }
-    } catch (error) {
-      ctx.status = 500;
-      console.log(error);
-    }
-  }
-);
-
 // get suggestions
 router.get("/suggestions/:user_id", jwtAuthMiddleware, async (ctx: any) => {
   try {
