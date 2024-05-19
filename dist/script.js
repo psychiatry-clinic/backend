@@ -3,7 +3,7 @@
 // import { faker } from "@faker-js/faker";
 // const prisma = new PrismaClient();
 // const seedData = async () => {
-//   // Seed Clinics
+//   // Seed Clinic
 //   // const clinicA = await prisma.clinic.create({
 //   //   data: {
 //   //     name: "Clinic A",

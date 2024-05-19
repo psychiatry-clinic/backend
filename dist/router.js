@@ -39,6 +39,9 @@ router.post("/login", async (ctx) => {
         where: {
             username: username,
         },
+        include: {
+            clinic: true,
+        },
     });
     if (user && user.password === password) {
         const token = await (0, generateJWT_1.default)(user);
@@ -147,15 +150,18 @@ router.get("/search/:user_id", jwtAuthMiddleware_1.default, async (ctx) => {
     ctx.body = res;
 });
 // get patient data
-router.get("/patients/:user_id/:patient_id", async (ctx) => {
-    const patient_id = +ctx.params.patient_id;
+router.get("/patient/:user_id/:patient_id", jwtAuthMiddleware_1.default, async (ctx) => {
     const user_id = +ctx.params.user_id;
+    const patient_id = +ctx.params.patient_id;
     try {
         const user = await prisma.user.findUnique({
             where: {
                 id: user_id,
             },
         });
+        console.log("====================================");
+        console.log(user);
+        console.log("====================================");
         if (!user)
             return (ctx.status = 404);
         if (user.role === "PSYCHOLOGIST") {
@@ -167,6 +173,9 @@ router.get("/patients/:user_id/:patient_id", async (ctx) => {
                     visits: {
                         where: {
                             active: true,
+                        },
+                        include: {
+                            clinic: true,
                         },
                     },
                     demographics: true,
@@ -184,6 +193,7 @@ router.get("/patients/:user_id/:patient_id", async (ctx) => {
                 include: {
                     visits: {
                         include: {
+                            clinic: true,
                             prescription: true,
                             tests: true,
                             doctor: true,
@@ -218,6 +228,7 @@ router.get("/patients/visits/:user_id/:visit_id", jwtAuthMiddleware_1.default, a
                         demographics: true,
                     },
                 },
+                clinic: true,
                 therapy: true,
                 prescription: true,
                 tests: true,
@@ -237,10 +248,57 @@ router.get("/patients/visits/:user_id/:visit_id", jwtAuthMiddleware_1.default, a
         console.log(error);
     }
 });
+// get suggestions
+router.get("/suggestions/:user_id", jwtAuthMiddleware_1.default, async (ctx) => {
+    try {
+        const res = await prisma.suggestions.findMany();
+        ctx.body = res;
+        ctx.status = 200;
+    }
+    catch (error) {
+        console.log(error);
+        ctx.status = 500;
+    }
+});
+// post suggestions
+router.post("/suggestions-edit/:user_id", jwtAuthMiddleware_1.default, async (ctx) => {
+    try {
+        const newSuggestion = ctx.request.body;
+        // const res = await prisma.suggestions.findMany();
+        const res = await prisma.suggestions.findFirst({
+            where: {
+                text: newSuggestion,
+            },
+        });
+        if (!res) {
+            const result = await prisma.suggestions.create({
+                data: {
+                    text: newSuggestion,
+                    color: "#000",
+                    order: 1,
+                    field: {
+                        connect: {
+                            id: 1,
+                        },
+                    },
+                },
+            });
+            ctx.body = result;
+            ctx.status = 200;
+        }
+        else {
+            ctx.body = "already exist";
+        }
+    }
+    catch (error) {
+        console.log(error);
+        ctx.status = 500;
+    }
+});
 // post new patient
 router.post("/patients-new/:user_id", jwtAuthMiddleware_1.default, async (ctx) => {
     const creator_id = +ctx.params.user_id;
-    const { name, dob, gender, phone, avatar, father_dob, father_edu, father_age, father_work, mother_dob, mother_age, mother_edu, mother_work, related, siblings, order, family_hx, notes, marital_status, children, residence, occupation, education, } = ctx.request.body;
+    const { name, dob, gender, phone, avatar, father_dob, father_edu, father_work, mother_dob, mother_edu, mother_work, related, siblings, order, family_hx, notes, marital_status, children, residence, occupation, education, } = ctx.request.body;
     if (creator_id) {
         const user = await prisma.user.findUnique({
             where: {
@@ -302,11 +360,10 @@ router.post("/visits-new/:user_id/:patient_id", jwtAuthMiddleware_1.default, asy
     try {
         const creator_id = +ctx.params.user_id;
         const patient_id = +ctx.params.patient_id;
-        const { chief_complaint, present_illness, examination, ddx, ix, consultations, management, notes, social_hx, family_hx, past_hx, occupation_hx, forensic_hx, personal_hx, development, } = ctx.request.body;
+        const { chief_complaint, present_illness, examination, ddx, ix, consultations, management, notes, social_hx, family_hx, past_hx, occupation_hx, forensic_hx, personal_hx, development, follow_up, clinicId, } = ctx.request.body;
         const res = await prisma.visit.create({
             data: {
                 active: true,
-                clinic: "Kadhimiya",
                 patient: {
                     connect: {
                         id: patient_id,
@@ -317,6 +374,12 @@ router.post("/visits-new/:user_id/:patient_id", jwtAuthMiddleware_1.default, asy
                         id: creator_id,
                     },
                 },
+                clinic: {
+                    connect: {
+                        id: clinicId,
+                    },
+                },
+                follow_up,
                 chief_complaint,
                 present_illness,
                 examination,
@@ -403,7 +466,7 @@ router.post("/visits-edit/:user_id/:visit_id/:patient_id", jwtAuthMiddleware_1.d
     try {
         const id = +ctx.params.visit_id;
         const patient_id = +ctx.params.patient_id;
-        const { chief_complaint, present_illness, examination, ddx, notes, consultations, ix, management, social_hx, family_hx, personal_hx, forensic_hx, occupation_hx, past_hx, development, therapyRequest, } = ctx.request.body;
+        const { chief_complaint, present_illness, examination, ddx, notes, consultations, ix, management, social_hx, family_hx, personal_hx, forensic_hx, occupation_hx, past_hx, development, therapyRequest, follow_up, } = ctx.request.body;
         const res = await prisma.visit.update({
             where: {
                 id: id,
@@ -418,6 +481,7 @@ router.post("/visits-edit/:user_id/:visit_id/:patient_id", jwtAuthMiddleware_1.d
                 ix,
                 therapyRequest,
                 management,
+                follow_up,
                 patient: {
                     update: {
                         where: {
@@ -477,15 +541,11 @@ router.post("/therapy/:user_id/:visit_id", jwtAuthMiddleware_1.default, async (c
     try {
         const user_id = +ctx.params.user_id;
         const visit_id = +ctx.params.visit_id;
-        const { notes, clinic } = ctx.request.body;
+        const { notes, clinicId } = ctx.request.body;
         // Check if therapy notes already exist for the visit
-        let therapy = await prisma.therapy.findFirst({
+        let therapy = await prisma.therapy.findUnique({
             where: {
-                Visit: {
-                    some: {
-                        id: visit_id,
-                    },
-                },
+                id: visit_id,
             },
         });
         if (therapy) {
@@ -516,7 +576,11 @@ router.post("/therapy/:user_id/:visit_id", jwtAuthMiddleware_1.default, async (c
                         },
                     },
                     notes: notes,
-                    clinic: clinic,
+                    clinic: {
+                        connect: {
+                            id: clinicId,
+                        },
+                    },
                 },
             });
             if (therapy) {
