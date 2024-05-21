@@ -6,6 +6,7 @@ import generateJWT from "./utilities/generateJWT";
 import jwtAuthMiddleware from "./utilities/jwtAuthMiddleware";
 
 import Router from "@koa/router";
+import { hashPassword, verifyPassword } from "./passwordFunctions";
 const prisma = new PrismaClient();
 
 const router = new Router();
@@ -20,26 +21,62 @@ const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
 };
 
-// router.options("*", async (ctx: any, next: any) => {
-//   ctx.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//   ctx.set("Access-Control-Allow-Origin", "*");
-//   ctx.set(
-//     "Access-Control-Allow-Headers",
-//     ctx.get("Access-Control-Request-Headers")
-//   );
-//   ctx.status = 204;
-//   await next();
-// });
-
 router.get("/", async (ctx: any) => {
   ctx.body = "Hello World";
 });
 
+// Register route
+router.post("/register", async (ctx: any) => {
+  const { username, fullName, password, clinic } = ctx.request.body;
+  console.log(ctx.request.body);
+
+  if (!username || !password || !fullName || !clinic) {
+    ctx.status = 400;
+    ctx.body = "Username and password are required";
+    return;
+  }
+
+  const hashedPassword = await hashPassword(password);
+  console.log("hashed password");
+  console.log(hashedPassword);
+
+  const userA = await prisma.user.findFirst({
+    where: {
+      username: username,
+    },
+  });
+
+  if (!userA) {
+    const userB = await prisma.user.create({
+      data: {
+        username: username,
+        fullName: fullName,
+        password: hashedPassword,
+        clinic: {
+          connect: {
+            name: clinic,
+          },
+        },
+      },
+    });
+    ctx.status = 200;
+    ctx.body = "User registered successfully";
+  } else {
+    ctx.status = 501;
+    ctx.body = "User already Exist";
+  }
+});
+
 router.post("/login", async (ctx: any) => {
   const { username, password } = ctx.request.body;
-  console.log("login");
 
-  let user = await prisma.user.findFirst({
+  if (!username || !password) {
+    ctx.status = 400;
+    ctx.body = "Username and password are required";
+    return;
+  }
+
+  let user = await prisma.user.findUnique({
     where: {
       username: username,
     },
@@ -47,19 +84,35 @@ router.post("/login", async (ctx: any) => {
       clinic: true,
     },
   });
-  if (user && user.password === password) {
-    const token = await generateJWT(user);
-    user = { ...user, password: "nice try" };
-    ctx.status = 200;
-    ctx.body = {
-      accessToken: token,
-      userData: user,
-      userAbilityRules: "all",
-    };
-  } else {
-    ctx.body = "Wrong username or password";
+
+  if (!user) {
     ctx.status = 401;
+    ctx.body = "Invalid username or password";
+    return;
   }
+
+  if (user.role === "DISABLED") {
+    ctx.status = 404;
+    ctx.body = "Contact Dr.Mustafa Alnoori to grant you access";
+    return;
+  }
+
+  const isPasswordValid = await verifyPassword(password, user.password);
+
+  if (!isPasswordValid) {
+    ctx.status = 401;
+    ctx.body = "Invalid username or password";
+    return;
+  }
+
+  const token = await generateJWT(user);
+  user = { ...user, password: "nice try" };
+  ctx.status = 200;
+  ctx.body = {
+    accessToken: token,
+    userData: user,
+    userAbilityRules: "all",
+  };
 });
 
 //get patients
@@ -170,10 +223,6 @@ router.get(
           id: user_id,
         },
       });
-
-      console.log("====================================");
-      console.log(user);
-      console.log("====================================");
 
       if (!user) return (ctx.status = 404);
 
