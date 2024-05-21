@@ -8,6 +8,7 @@ const client_1 = require("@prisma/client");
 const generateJWT_1 = __importDefault(require("./utilities/generateJWT"));
 const jwtAuthMiddleware_1 = __importDefault(require("./utilities/jwtAuthMiddleware"));
 const router_1 = __importDefault(require("@koa/router"));
+const passwordFunctions_1 = require("./passwordFunctions");
 const prisma = new client_1.PrismaClient();
 const router = new router_1.default();
 exports.default = router;
@@ -19,23 +20,55 @@ const HTTP_STATUS = {
     NOT_FOUND: 404,
     INTERNAL_SERVER_ERROR: 500,
 };
-// router.options("*", async (ctx: any, next: any) => {
-//   ctx.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//   ctx.set("Access-Control-Allow-Origin", "*");
-//   ctx.set(
-//     "Access-Control-Allow-Headers",
-//     ctx.get("Access-Control-Request-Headers")
-//   );
-//   ctx.status = 204;
-//   await next();
-// });
 router.get("/", async (ctx) => {
     ctx.body = "Hello World";
 });
+// Register route
+router.post("/register", async (ctx) => {
+    const { username, fullName, password, clinic } = ctx.request.body;
+    console.log(ctx.request.body);
+    if (!username || !password || !fullName || !clinic) {
+        ctx.status = 400;
+        ctx.body = "Username and password are required";
+        return;
+    }
+    const hashedPassword = await (0, passwordFunctions_1.hashPassword)(password);
+    console.log("hashed password");
+    console.log(hashedPassword);
+    const userA = await prisma.user.findFirst({
+        where: {
+            username: username,
+        },
+    });
+    if (!userA) {
+        const userB = await prisma.user.create({
+            data: {
+                username: username,
+                fullName: fullName,
+                password: hashedPassword,
+                clinic: {
+                    connect: {
+                        name: clinic,
+                    },
+                },
+            },
+        });
+        ctx.status = 200;
+        ctx.body = "User registered successfully";
+    }
+    else {
+        ctx.status = 501;
+        ctx.body = "User already Exist";
+    }
+});
 router.post("/login", async (ctx) => {
     const { username, password } = ctx.request.body;
-    console.log("login");
-    let user = await prisma.user.findFirst({
+    if (!username || !password) {
+        ctx.status = 400;
+        ctx.body = "Username and password are required";
+        return;
+    }
+    let user = await prisma.user.findUnique({
         where: {
             username: username,
         },
@@ -43,20 +76,30 @@ router.post("/login", async (ctx) => {
             clinic: true,
         },
     });
-    if (user && user.password === password) {
-        const token = await (0, generateJWT_1.default)(user);
-        user = { ...user, password: "nice try" };
-        ctx.status = 200;
-        ctx.body = {
-            accessToken: token,
-            userData: user,
-            userAbilityRules: "all",
-        };
-    }
-    else {
-        ctx.body = "Wrong username or password";
+    if (!user) {
         ctx.status = 401;
+        ctx.body = "Invalid username or password";
+        return;
     }
+    if (user.role === "DISABLED") {
+        ctx.status = 404;
+        ctx.body = "Contact Dr.Mustafa Alnoori to grant you access";
+        return;
+    }
+    const isPasswordValid = await (0, passwordFunctions_1.verifyPassword)(password, user.password);
+    if (!isPasswordValid) {
+        ctx.status = 401;
+        ctx.body = "Invalid username or password";
+        return;
+    }
+    const token = await (0, generateJWT_1.default)(user);
+    user = { ...user, password: "nice try" };
+    ctx.status = 200;
+    ctx.body = {
+        accessToken: token,
+        userData: user,
+        userAbilityRules: "all",
+    };
 });
 //get patients
 router.get("/patients/:user_id", jwtAuthMiddleware_1.default, async (ctx) => {
@@ -159,9 +202,6 @@ router.get("/patient/:user_id/:patient_id", jwtAuthMiddleware_1.default, async (
                 id: user_id,
             },
         });
-        console.log("====================================");
-        console.log(user);
-        console.log("====================================");
         if (!user)
             return (ctx.status = 404);
         if (user.role === "PSYCHOLOGIST") {
