@@ -544,7 +544,7 @@ const func = () => {
 // func();
 
 const migrateTo = () => {
-  const readData = fs.readFileSync("results1.json", "utf8");
+  const readData = fs.readFileSync("results4.json", "utf8");
   arrayOfPatients = JSON.parse(readData);
 
   arrayOfPatients.forEach(async (element: any) => {
@@ -625,4 +625,4 @@ const migrateTo = () => {
   });
 };
 
-migrateTo();
+// migrateTo();
