@@ -4,7 +4,8 @@
   "description": "",
   "main": "/dist/server.js",
   "scripts": {
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "studio":"npx prisma studio"
   },
   "keywords": [],
   "author": "",

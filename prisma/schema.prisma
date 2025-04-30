@@ -35,12 +35,14 @@ enum UserRole {
   PSYCHOLOGIST
   PHARMACIST
   NURSE
+  RECEPTIONIST
   DISABLED
 }
 
 model Clinic {
   id        Int         @id @default(autoincrement())
   name      String      @unique
+  key       String?     
   user      User[]
   Visit     Visit[]
   Therapy   Therapy[]
