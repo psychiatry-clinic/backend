@@ -110,6 +110,11 @@ router.get('/patients/:user_id', jwtAuthMiddleware_1.default, async (ctx) => {
                 id: user_id
             }
         });
+        if (!user) {
+            ctx.status = 404;
+            ctx.body = { error: 'User not found' };
+            return;
+        }
         const itemsPerPage = parseInt(ctx.query.itemsPerPage) || 10; // Default to 10 items per page if not provided
         const page = parseInt(ctx.query.page) || 1;
         const q = ctx.query.q;
@@ -128,7 +133,7 @@ router.get('/patients/:user_id', jwtAuthMiddleware_1.default, async (ctx) => {
                 ]
             };
         }
-        if (user?.role === 'PSYCHOLOGIST') {
+        if (user.role === 'PSYCHOLOGIST') {
             const [patients, totalPatients] = await Promise.all([
                 prisma.patient.findMany({
                     where: {
@@ -137,7 +142,8 @@ router.get('/patients/:user_id', jwtAuthMiddleware_1.default, async (ctx) => {
                             {
                                 visits: {
                                     some: {
-                                        therapyRequest: true
+                                        therapyRequest: true,
+                                        clinicId: user.clinicId
                                     }
                                 }
                             }
@@ -163,7 +169,16 @@ router.get('/patients/:user_id', jwtAuthMiddleware_1.default, async (ctx) => {
             const [patients, totalPatients] = await Promise.all([
                 prisma.patient.findMany({
                     where: {
-                        AND: [whereCondition]
+                        AND: [
+                            whereCondition,
+                            {
+                                visits: {
+                                    some: {
+                                        clinicId: user.clinicId
+                                    }
+                                }
+                            }
+                        ]
                     },
                     orderBy: {
                         createdAt: 'desc'
