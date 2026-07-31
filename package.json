@@ -5,7 +5,8 @@
   "main": "/dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "studio":"npx prisma studio"
+    "studio":"npx prisma studio",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
