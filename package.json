@@ -5,7 +5,7 @@
   "main": "/dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
-    "studio":"npx prisma studio",
+    "studio": "npx prisma studio",
     "build": "tsc"
   },
   "keywords": [],
@@ -32,7 +32,6 @@
     "nodemon": "^3.1.0",
     "prisma": "^5.12.1",
     "ts-node": "^10.9.2",
-    "tsc": "^2.0.4",
     "typescript": "^5.4.5"
   }
 }
